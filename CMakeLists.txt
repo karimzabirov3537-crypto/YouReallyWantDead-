@@ -27,4 +27,7 @@ add_subdirectory($ENV{GEODE_SDK} ${CMAKE_CURRENT_BINARY_DIR}/geode)
 # Set up dependencies, resources, and link Geode.
 setup_geode_mod(${PROJECT_NAME})
 
-add_compile_definitions(FMT_NO_FMT_UTC_TIMESTAMP=1 FMT_STATIC_THROWS=1)
+# Полное уничтожение проверок fmt во всем проекте
+add_compile_definitions(FMT_ENFORCE_COMPILE_STRING_CHECK=0)
+target_compile_definitions(${PROJECT_NAME} PRIVATE FMT_ENFORCE_COMPILE_STRING_CHECK=0)
+
