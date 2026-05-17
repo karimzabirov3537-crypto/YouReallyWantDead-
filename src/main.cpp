@@ -1,3 +1,8 @@
+// ХАК-ЗАГЛУШКА ДЛЯ FMT: Отключаем проверки строк до подключения Geode
+#define FMT_ENFORCE_COMPILE_STRING_CHECK 0
+#define FMT_USE_CONSTEXPR 0
+#define FMT_NO_FMT_UTC_TIMESTAMP 1
+
 #include <Geode/Geode.hpp>
 #include <Geode/modify/PlayLayer.hpp>
 
