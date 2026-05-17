@@ -1,6 +1,10 @@
 cmake_minimum_required(VERSION 3.21)
 
-# Полностью отключаем constexpr-проверки fmt на уровне всего компилятора
+# Возвращаем C++20, чтобы исправить ошибку с 'atomic_size_t'
+set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
+# Жестко отключаем constexpr-проверки fmt для C++20 на уровне всего компилятора
 add_compile_options(-DFMT_ENFORCE_COMPILE_STRING_CHECK=0)
 add_compile_options(-DFMT_USE_CONSTEXPR=0)
 add_compile_options(-DFMT_NO_FMT_UTC_TIMESTAMP=1)
@@ -8,10 +12,6 @@ add_compile_options(-DFMT_NO_FMT_UTC_TIMESTAMP=1)
 if(ANDROID)
     add_compile_options(-fno-constexpr-steps)
 endif()
-
-# Настройки стандарта
-set(CMAKE_CXX_STANDARD 17)
-set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 if ("${CMAKE_SYSTEM_NAME}" STREQUAL "iOS" OR IOS)
     set(CMAKE_OSX_ARCHITECTURES "arm64")
@@ -23,7 +23,7 @@ set(CMAKE_CXX_VISIBILITY_PRESET hidden)
 
 project(Template VERSION 1.0.0)
 
-# Глобальные дефайны (дублируем для надежности)
+# Дублируем дефайны глобально для всех зависимостей мода
 add_compile_definitions(FMT_ENFORCE_COMPILE_STRING_CHECK=0)
 add_compile_definitions(FMT_USE_CONSTEXPR=0)
 
