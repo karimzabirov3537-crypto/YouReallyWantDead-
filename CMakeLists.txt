@@ -1,5 +1,7 @@
 cmake_minimum_required(VERSION 3.21)
-set(CMAKE_CXX_STANDARD 23)
+
+# Переключаем на стабильный стандарт C++20 (C++23 ломает старый fmt на Android)
+set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 if ("${CMAKE_SYSTEM_NAME}" STREQUAL "iOS" OR IOS)
@@ -12,14 +14,15 @@ set(CMAKE_CXX_VISIBILITY_PRESET hidden)
 
 project(Template VERSION 1.0.0)
 
-# ГЛОБАЛЬНЫЙ ФИКС: Отключаем проверку строк ДО загрузки Geode SDK
+# ГЛОБАЛЬНЫЕ ФИКСЫ ДЛЯ FMT (Должны быть строго ДО загрузки Geode SDK)
 add_compile_definitions(FMT_ENFORCE_COMPILE_STRING_CHECK=0)
-add_compile_definitions(FMT_NO_FMT_UTC_TIMESTAMP=1 FMT_STATIC_THROWS=1)
+add_compile_definitions(FMT_NO_FMT_UTC_TIMESTAMP=1)
+add_compile_definitions(FMT_STATIC_THROWS=1)
 
-# Add all source files inside src (recursively)
+# Сканируем все исходники в папке src
 file(GLOB_RECURSE SOURCES CONFIGURE_DEPENDS src/*.cpp)
 
-# Set up the mod binary
+# Создаем бинарник мода
 add_library(${PROJECT_NAME} SHARED ${SOURCES})
 
 if (NOT DEFINED ENV{GEODE_SDK})
@@ -28,10 +31,11 @@ else()
     message(STATUS "Found Geode: $ENV{GEODE_SDK}")
 endif()
 
+# Подключаем поддиректорию Geode
 add_subdirectory($ENV{GEODE_SDK} ${CMAKE_CURRENT_BINARY_DIR}/geode)
 
-# Set up dependencies, resources, and link Geode.
+# Настраиваем зависимости Geode
 setup_geode_mod(${PROJECT_NAME})
 
-# Дополнительно защищаем наш собственный бинарник мода
+# Дополнительно защищаем наш собственный бинарник мода от строгих проверок строк
 target_compile_definitions(${PROJECT_NAME} PRIVATE FMT_ENFORCE_COMPILE_STRING_CHECK=0)
