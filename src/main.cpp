@@ -4,44 +4,42 @@
 using namespace geode::prelude;
 
 bool g_isNoclipActive = false;
-bool g_isWaitingForDecision = false;
+float g_noclipTimer = 0.0f;
 
 class $modify(MyPlayLayer, PlayLayer) {
-    void disableNoclip(float dt) {
-        g_isNoclipActive = false;
-        Notification::create("Noclip deactivated!", NotificationIcon::Warning)->show();
+    // Безопасный игровой цикл для отсчета времени
+    void update(float dt) {
+        PlayLayer::update(dt);
+
+        if (g_isNoclipActive) {
+            g_noclipTimer -= dt;
+            if (g_noclipTimer <= 0.0f) {
+                g_isNoclipActive = false;
+            }
+        }
+    }
+
+    // Хукаем продолжение игры после выхода из паузы
+    void resumeAndStopPause() {
+        PlayLayer::resumeAndStopPause();
+        
+        // Если пауза была вызвана нашей виртуальной "смертью" — даем ноуклип
+        if (g_noclipTimer == -1.0f) {
+            g_isNoclipActive = true;
+            g_noclipTimer = 5.0f; // 5 секунд бессмертия
+        }
     }
 
     void destroyPlayer(PlayerObject* p0, GameObject* p1) {
         if (g_isNoclipActive) return;
-        if (g_isWaitingForDecision) return;
-        g_isWaitingForDecision = true;
 
-        // Фикс для Geode v3: оборачиваем каждую строку в fmt::runtime()
-        // Теперь компилятор Android сожрет этот текст без единой ошибки!
-        geode::createQuickPopup(
-            fmt::runtime("Are you sure?"),             
-            fmt::runtime("Do you really want to die?"), 
-            fmt::runtime("No"), 
-            fmt::runtime("Yes"),                 
-            [this](auto, bool btn2) {
-                if (btn2) {
-                    g_isNoclipActive = true;
-                    Notification::create("Saved! Noclip active!", NotificationIcon::Success)->show();
+        // Вместо смерти принудительно прожимаем стандартную паузу GD
+        if (g_noclipTimer <= 0.0f) {
+            g_noclipTimer = -1.0f; // Ставим маркер "второго шанса"
+            this->pushButton(0, true); // Вызов стандартного меню паузы игры
+            return;
+        }
 
-                    auto scheduler = cocos2d::CCDirector::sharedDirector()->getScheduler();
-                    scheduler->scheduleSelector(
-                        schedule_selector(MyPlayLayer::disableNoclip), 
-                        this, 
-                        0.0f, 0, 5.0f, false
-                    );
-                } else {
-                    g_isNoclipActive = false;
-                    g_isWaitingForDecision = false;
-                    this->destroyPlayer(this->m_player1, nullptr);
-                }
-                g_isWaitingForDecision = false;
-            }
-        );
+        PlayLayer::destroyPlayer(p0, p1);
     }
 };
